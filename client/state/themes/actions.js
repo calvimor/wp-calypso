@@ -415,7 +415,7 @@ export function themeActivated( themeStylesheet, siteId, source = 'unknown', pur
  * @return {Function}         Action thunk
  */
 export function installTheme( themeId, siteId ) {
-	return ( dispatch, getState ) => {
+	return ( dispatch ) => {
 		dispatch( {
 			type: THEME_INSTALL,
 			siteId,
@@ -423,16 +423,13 @@ export function installTheme( themeId, siteId ) {
 		} );
 
 		return wpcom.undocumented().installThemeOnJetpack( siteId, themeId )
-			.then( ( theme ) => {
-				// If Jetpack plugin has Themes Extended Features,
-				// we filter out -wpcom suffixed themes because we will show them in
-				// second list that is specific to WordPress.com themes.
-				const keepWpcom = ! config.isEnabled( 'manage/themes/upload' ) ||
-					! hasJetpackSiteJetpackThemesExtendedFeatures( getState(), siteId );
-
-				if ( keepWpcom || ! isThemeFromWpcom( theme.id ) ) {
-					dispatch( receiveTheme( theme, siteId ) );
-				}
+			.then( ( /* theme */ ) => {
+				// We do not `dispatch( receiveTheme( theme, siteId ) )` here because
+				// in our UI, themes from WP.com (and WP.org) are already present in
+				// a separate list, and we do not want to duplicate them.
+				// Arguably, this is too tightly coupled to our UI, but because pagination,
+				// it's easier to filter _before_ storing themes in ThemeQueryManager than
+				// when fetching themes from it.
 
 				dispatch( {
 					type: THEME_INSTALL_SUCCESS,
